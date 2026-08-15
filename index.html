@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+  <title>Control de Asistencia</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: #f3f4f6;
+      color: #111827;
+    }
+
+    .app {
+      width: 100%;
+      max-width: 600px;
+      margin: 0 auto;
+      min-height: 100vh;
+      background: #ffffff;
+    }
+
+    .header {
+      background: #111827;
+      color: white;
+      padding: 24px 20px;
+      text-align: center;
+    }
+
+    .header h1 {
+      margin: 0;
+      font-size: 25px;
+    }
+
+    .header p {
+      margin: 7px 0 0;
+      font-size: 14px;
+      opacity: .8;
+    }
+
+    .content {
+      padding: 20px;
+    }
+
+    .card {
+      background: white;
+      border: 1px solid #e5e7eb;
+      border-radius: 16px;
+      padding: 18px;
+      margin-bottom: 18px;
+      box-shadow: 0 3px 12px rgba(0,0,0,.05);
+    }
+
+    label {
+      display: block;
+      font-weight: 700;
+      font-size: 14px;
+      margin-bottom: 7px;
+    }
+
+    input {
+      width: 100%;
+      height: 52px;
+      border: 1px solid #d1d5db;
+      border-radius: 11px;
+      padding: 0 14px;
+      font-size: 16px;
+      outline: none;
+      margin-bottom: 15px;
+      background: #fff;
+    }
+
+    input:focus {
+      border-color: #111827;
+      box-shadow: 0 0 0 3px rgba(17,24,39,.08);
+    }
+
+    button {
+      width: 100%;
+      min-height: 52px;
+      border: 0;
+      border-radius: 11px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .btn-add {
+      background: #111827;
+      color: white;
+    }
+
+    .btn-add:active {
+      transform: scale(.98);
+    }
+
+    .counter {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .counter strong {
+      font-size: 18px;
+    }
+
+    .badge {
+      background: #e5e7eb;
+      padding: 6px 10px;
+      border-radius: 20px;
+      font-weight: 700;
+      font-size: 14px;
+    }
+
+    .person {
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 14px;
+      margin-bottom: 10px;
+      position: relative;
+      background: #fafafa;
+    }
+
+    .person-number {
+      font-size: 12px;
+      color: #6b7280;
+      margin-bottom: 4px;
+    }
+
+    .person-name {
+      font-weight: 700;
+      font-size: 17px;
+      padding-right: 40px;
+    }
+
+    .person-data {
+      font-size: 14px;
+      color: #4b5563;
+      margin-top: 5px;
+      line-height: 1.5;
+    }
+
+    .delete {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      width: 34px;
+      min-height: 34px;
+      height: 34px;
+      border-radius: 8px;
+      background: #fee2e2;
+      color: #b91c1c;
+      font-size: 18px;
+      padding: 0;
+    }
+
+    .empty {
+      text-align: center;
+      color: #6b7280;
+      padding: 25px 10px;
+      font-size: 14px;
+    }
+
+    .actions {
+      display: grid;
+      gap: 10px;
+      margin-top: 15px;
+    }
+
+    .btn-export {
+      background: #16a34a;
+      color: white;
+    }
+
+    .btn-clear {
+      background: #fee2e2;
+      color: #b91c1c;
+    }
+
+    .date {
+      text-align: center;
+      color: #6b7280;
+      font-size: 13px;
+      margin-top: 5px;
+    }
+
+    .message {
+      display: none;
+      padding: 12px;
+      border-radius: 10px;
+      margin-bottom: 15px;
+      text-align: center;
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .success {
+      display: block;
+      background: #dcfce7;
+      color: #166534;
+    }
+
+    @media (min-width: 601px) {
+      body {
+        padding: 20px 0;
+      }
+
+      .app {
+        border-radius: 18px;
+        overflow: hidden;
+        min-height: auto;
+        box-shadow: 0 10px 35px rgba(0,0,0,.10);
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="app">
+
+  <header class="header">
+    <h1>Control de Asistencia</h1>
+    <p>Registro rápido de asistentes</p>
+    <div class="date" id="fecha"></div>
+  </header>
+
+  <main class="content">
+
+    <div id="message" class="message"></div>
+
+    <section class="card">
+
+      <label for="nombre">Nombre completo</label>
+      <input
+        type="text"
+        id="nombre"
+        placeholder="Ej. Juan Pérez"
+        autocomplete="name"
+      >
+
+      <label for="telefono">Número de celular</label>
+      <input
+        type="tel"
+        id="telefono"
+        placeholder="Ej. 3001234567"
+        inputmode="numeric"
+        autocomplete="tel"
+      >
+
+      <label for="vivienda">¿Dónde vive?</label>
+      <input
+        type="text"
+        id="vivienda"
+        placeholder="Ej. San Javier"
+        autocomplete="street-address"
+      >
+
+      <button class="btn-add" onclick="agregarPersona()">
+        + Registrar asistencia
+      </button>
+
+    </section>
+
+    <section class="card">
+
+      <div class="counter">
+        <strong>Asistentes registrados</strong>
+        <span class="badge" id="contador">0</span>
+      </div>
+
+      <div id="lista">
+        <div class="empty">
+          Aún no hay personas registradas.
+        </div>
+      </div>
+
+      <div class="actions">
+
+        <button class="btn-export" onclick="exportarTXT()">
+          ↓ Exportar asistencia
+        </button>
+
+        <button class="btn-clear" onclick="limpiarTodo()">
+          🗑 Limpiar todos los registros
+        </button>
+
+      </div>
+
+    </section>
+
+  </main>
+
+</div>
+
+<script>
+
+  const STORAGE_KEY = "control_asistencia";
+
+  let asistentes = JSON.parse(
+    localStorage.getItem(STORAGE_KEY) || "[]"
+  );
+
+  function obtenerFecha() {
+
+    const ahora = new Date();
+
+    return ahora.toLocaleDateString("es-CO", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric"
+    });
+
+  }
+
+  document.getElementById("fecha").textContent =
+    "Fecha: " + obtenerFecha();
+
+
+  function guardarDatos() {
+
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify(asistentes)
+    );
+
+  }
+
+
+  function mostrarMensaje(texto) {
+
+    const mensaje = document.getElementById("message");
+
+    mensaje.textContent = texto;
+    mensaje.className = "message success";
+
+    setTimeout(() => {
+      mensaje.className = "message";
+    }, 2500);
+
+  }
+
+
+  function agregarPersona() {
+
+    const nombre =
+      document.getElementById("nombre").value.trim();
+
+    const telefono =
+      document.getElementById("telefono").value.trim();
+
+    const vivienda =
+      document.getElementById("vivienda").value.trim();
+
+
+    if (!nombre) {
+
+      alert("Por favor, escribe el nombre completo.");
+
+      document.getElementById("nombre").focus();
+
+      return;
+    }
+
+
+    if (!telefono) {
+
+      alert("Por favor, escribe el número de celular.");
+
+      document.getElementById("telefono").focus();
+
+      return;
+    }
+
+
+    if (!vivienda) {
+
+      alert("Por favor, indica dónde vive.");
+
+      document.getElementById("vivienda").focus();
+
+      return;
+    }
+
+
+    const persona = {
+
+      id: Date.now(),
+
+      nombre: nombre,
+
+      telefono: telefono,
+
+      vivienda: vivienda
+
+    };
+
+
+    asistentes.push(persona);
+
+    guardarDatos();
+
+    mostrarLista();
+
+    document.getElementById("nombre").value = "";
+    document.getElementById("telefono").value = "";
+    document.getElementById("vivienda").value = "";
+
+    document.getElementById("nombre").focus();
+
+    mostrarMensaje("Asistencia registrada correctamente.");
+
+  }
+
+
+  function mostrarLista() {
+
+    const lista =
+      document.getElementById("lista");
+
+    const contador =
+      document.getElementById("contador");
+
+
+    contador.textContent = asistentes.length;
+
+
+    if (asistentes.length === 0) {
+
+      lista.innerHTML = `
+        <div class="empty">
+          Aún no hay personas registradas.
+        </div>
+      `;
+
+      return;
+    }
+
+
+    lista.innerHTML = "";
+
+
+    asistentes.forEach((persona, index) => {
+
+      const elemento =
+        document.createElement("div");
+
+      elemento.className = "person";
+
+
+      elemento.innerHTML = `
+
+        <div class="person-number">
+          Asistente #${index + 1}
+        </div>
+
+        <div class="person-name">
+          ${escaparHTML(persona.nombre)}
+        </div>
+
+        <div class="person-data">
+          📱 ${escaparHTML(persona.telefono)}<br>
+          📍 ${escaparHTML(persona.vivienda)}
+        </div>
+
+        <button
+          class="delete"
+          onclick="eliminarPersona(${persona.id})"
+          aria-label="Eliminar"
+        >
+          ×
+        </button>
+
+      `;
+
+
+      lista.appendChild(elemento);
+
+    });
+
+  }
+
+
+  function eliminarPersona(id) {
+
+    const confirmar =
+      confirm("¿Deseas eliminar este registro?");
+
+    if (!confirmar) return;
+
+
+    asistentes =
+      asistentes.filter(persona => persona.id !== id);
+
+    guardarDatos();
+
+    mostrarLista();
+
+  }
+
+
+  function limpiarTodo() {
+
+    if (asistentes.length === 0) {
+
+      alert("No hay registros para eliminar.");
+
+      return;
+    }
+
+
+    const confirmar =
+      confirm(
+        "¿Seguro que deseas eliminar TODOS los registros?"
+      );
+
+
+    if (!confirmar) return;
+
+
+    asistentes = [];
+
+    guardarDatos();
+
+    mostrarLista();
+
+    mostrarMensaje("Todos los registros fueron eliminados.");
+
+  }
+
+
+  function exportarTXT() {
+
+    if (asistentes.length === 0) {
+
+      alert(
+        "No hay asistentes registrados para exportar."
+      );
+
+      return;
+    }
+
+
+    let contenido = "";
+
+    contenido += "CONTROL DE ASISTENCIA\n";
+    contenido += "=====================\n\n";
+
+    contenido += "Fecha: " + obtenerFecha() + "\n";
+
+    contenido +=
+      "Total de asistentes: " +
+      asistentes.length +
+      "\n\n";
+
+
+    asistentes.forEach((persona, index) => {
+
+      contenido +=
+        (index + 1) +
+        ". " +
+        persona.nombre +
+        "\n";
+
+      contenido +=
+        "   Celular: " +
+        persona.telefono +
+        "\n";
+
+      contenido +=
+        "   Vive en: " +
+        persona.vivienda +
+        "\n\n";
+
+    });
+
+
+    const archivo =
+      new Blob(
+        [contenido],
+        {
+          type: "text/plain;charset=utf-8"
+        }
+      );
+
+
+    const url =
+      URL.createObjectURL(archivo);
+
+
+    const enlace =
+      document.createElement("a");
+
+    const fechaArchivo =
+      new Date()
+        .toISOString()
+        .slice(0, 10);
+
+
+    enlace.href = url;
+
+    enlace.download =
+      "asistencia_" +
+      fechaArchivo +
+      ".txt";
+
+
+    document.body.appendChild(enlace);
+
+    enlace.click();
+
+    document.body.removeChild(enlace);
+
+    URL.revokeObjectURL(url);
+
+  }
+
+
+  function escaparHTML(texto) {
+
+    const div =
+      document.createElement("div");
+
+    div.textContent = texto;
+
+    return div.innerHTML;
+
+  }
+
+
+  /*
+    Permite registrar usando la tecla Enter.
+  */
+
+  document.addEventListener("keydown", function(event) {
+
+    if (event.key === "Enter") {
+
+      const activo =
+        document.activeElement;
+
+      if (
+        activo.tagName === "INPUT"
+      ) {
+
+        event.preventDefault();
+
+        agregarPersona();
+
+      }
+
+    }
+
+  });
+
+
+  /*
+    Mostrar registros guardados
+    al abrir la página.
+  */
+
+  mostrarLista();
+
+</script>
+
+</body>
+</html>
