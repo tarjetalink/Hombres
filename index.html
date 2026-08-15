@@ -6,6 +6,8 @@
 
   <title>Control de Asistencia</title>
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
   <style>
     * {
       box-sizing: border-box;
@@ -285,8 +287,8 @@
 
       <div class="actions">
 
-        <button class="btn-export" onclick="exportarTXT()">
-          ↓ Exportar asistencia
+        <button class="btn-export" onclick="exportarPDF()">
+          ↓ Exportar asistencia (PDF)
         </button>
 
         <button class="btn-clear" onclick="limpiarTodo()">
@@ -537,7 +539,12 @@
   }
 
 
-  function exportarTXT() {
+  /*
+    Exporta la asistencia como PDF con
+    letra grande y fácil de leer.
+  */
+
+  function exportarPDF() {
 
     if (asistentes.length === 0) {
 
@@ -548,78 +555,106 @@
       return;
     }
 
+    if (typeof window.jspdf === "undefined") {
 
-    let contenido = "";
-
-    contenido += "CONTROL DE ASISTENCIA\n";
-    contenido += "=====================\n\n";
-
-    contenido += "Fecha: " + obtenerFecha() + "\n";
-
-    contenido +=
-      "Total de asistentes: " +
-      asistentes.length +
-      "\n\n";
-
-
-    asistentes.forEach((persona, index) => {
-
-      contenido +=
-        (index + 1) +
-        ". " +
-        persona.nombre +
-        "\n";
-
-      contenido +=
-        "   Celular: " +
-        persona.telefono +
-        "\n";
-
-      contenido +=
-        "   Vive en: " +
-        persona.vivienda +
-        "\n\n";
-
-    });
-
-
-    const archivo =
-      new Blob(
-        [contenido],
-        {
-          type: "text/plain;charset=utf-8"
-        }
+      alert(
+        "No se pudo cargar el generador de PDF. Verifica tu conexión a internet e intenta de nuevo."
       );
 
+      return;
+    }
 
-    const url =
-      URL.createObjectURL(archivo);
+    const { jsPDF } = window.jspdf;
 
+    const doc = new jsPDF({
+      unit: "mm",
+      format: "a4"
+    });
 
-    const enlace =
-      document.createElement("a");
+    const margenIzq = 18;
+    let y = 22;
+    const anchoPagina = doc.internal.pageSize.getWidth();
+    const altoPagina = doc.internal.pageSize.getHeight();
+
+    function saltoDePaginaSiNecesario(espacioNecesario) {
+
+      if (y + espacioNecesario > altoPagina - 18) {
+
+        doc.addPage();
+
+        y = 22;
+
+      }
+
+    }
+
+    // Título
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(22);
+    doc.text("CONTROL DE ASISTENCIA", margenIzq, y);
+
+    y += 6;
+    doc.setDrawColor(17, 24, 39);
+    doc.setLineWidth(0.6);
+    doc.line(margenIzq, y, anchoPagina - margenIzq, y);
+
+    y += 10;
+
+    // Fecha y total
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(14);
+    doc.text("Fecha: " + obtenerFecha(), margenIzq, y);
+
+    y += 8;
+    doc.text(
+      "Total de asistentes: " + asistentes.length,
+      margenIzq,
+      y
+    );
+
+    y += 12;
+
+    // Listado de asistentes
+    asistentes.forEach((persona, index) => {
+
+      saltoDePaginaSiNecesario(28);
+
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(16);
+      doc.text(
+        (index + 1) + ". " + persona.nombre,
+        margenIzq,
+        y
+      );
+
+      y += 8;
+
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(13);
+      doc.text(
+        "Celular: " + persona.telefono,
+        margenIzq + 6,
+        y
+      );
+
+      y += 7;
+
+      doc.text(
+        "Vive en: " + persona.vivienda,
+        margenIzq + 6,
+        y
+      );
+
+      y += 12;
+
+    });
 
     const fechaArchivo =
       new Date()
         .toISOString()
         .slice(0, 10);
 
-
-    enlace.href = url;
-
-    enlace.download =
-      "asistencia_" +
-      fechaArchivo +
-      ".txt";
-
-
-    document.body.appendChild(enlace);
-
-    enlace.click();
-
-    document.body.removeChild(enlace);
-
-    URL.revokeObjectURL(url);
+    doc.save("asistencia_" + fechaArchivo + ".pdf");
 
   }
 
